@@ -18,8 +18,8 @@ The app is intentionally scoped — the value is in the engineering decisions, n
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
-cd linkz-seats
+git clone https://github.com/usman10scorpio/linkz.git
+cd linkz
 npm run install:all
 ```
 
@@ -29,7 +29,7 @@ npm run install:all
 cp .env.example backend/.env
 ```
 
-Open `backend/.env` and set your `JWT_SECRET` to a long random string:
+Open `backend/.env` and replace `JWT_SECRET` with a long random string:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -48,10 +48,10 @@ This creates the 3 seats with status `available`. The script is idempotent — s
 Open two terminals:
 
 ```bash
-# Terminal 1 — backend
+# Terminal 1 — backend (http://localhost:4000)
 npm run dev:backend
 
-# Terminal 2 — frontend
+# Terminal 2 — frontend (http://localhost:5173)
 npm run dev:frontend
 ```
 
@@ -61,42 +61,45 @@ Then open [http://localhost:5173](http://localhost:5173).
 
 ## Environment Variables
 
-All backend config lives in `backend/.env`. See `backend/.env.example` for the full reference.
+All backend config lives in `backend/.env`. See `.env.example` at the repo root for the full reference with descriptions.
 
-| Variable         | Required | Default                              | Notes                                          |
-|------------------|----------|--------------------------------------|------------------------------------------------|
-| `MONGODB_URI`    | Yes      | —                                    | MongoDB connection string                      |
-| `JWT_SECRET`     | Yes      | —                                    | Long random string, never commit this          |
-| `PORT`           | No       | `4000`                               | Backend port                                   |
-| `CLIENT_ORIGIN`  | No       | `http://localhost:5173`              | Frontend origin (CORS)                         |
-| `NODE_ENV`       | No       | `development`                        | Set to `production` for prod deployments       |
-| `LOG_LEVEL`      | No       | `info`                               | winston log level                              |
+| Variable         | Required | Default                     | Notes                                     |
+|------------------|----------|-----------------------------|-------------------------------------------|
+| `MONGODB_URI`    | Yes      | —                           | MongoDB connection string                 |
+| `JWT_SECRET`     | Yes      | —                           | Long random string, never commit this     |
+| `PORT`           | No       | `4000`                      | Backend port                              |
+| `CLIENT_ORIGIN`  | No       | `http://localhost:5173`     | Frontend origin (CORS)                    |
+| `NODE_ENV`       | No       | `development`               | Set to `production` for prod deployments  |
+| `LOG_LEVEL`      | No       | `info`                      | winston log level                         |
 
 ---
 
 ## Project Structure
 
 ```
-linkz-seats/
+linkz/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # DB connection, logger
-│   │   ├── middleware/       # JWT auth, error handler
-│   │   ├── models/           # Mongoose models: User, Seat, Booking
-│   │   ├── routes/           # Express routes: auth, seats, payments
-│   │   ├── services/         # Business logic: seatService, paymentService
-│   │   ├── scripts/          # seed.ts
-│   │   └── index.ts          # Server entry point
+│   │   ├── config/           # DB connection, logger
+│   │   ├── middleware/        # JWT auth, error handler
+│   │   ├── models/            # Mongoose models: User, Seat, Booking
+│   │   ├── routes/            # Express routes: auth, seats, payments
+│   │   ├── services/          # Business logic: seatService, paymentService
+│   │   ├── scripts/           # seed.ts — creates the 3 seats
+│   │   └── index.ts           # Server entry point
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── api/              # Axios client with interceptors
-│   │   ├── components/       # Navbar, SeatCard, CheckoutForm, etc.
-│   │   ├── context/          # AuthContext (React Context + hooks)
-│   │   ├── pages/            # Login, Register, Home, Checkout, Success, Failure
-│   │   └── utils/            # Error helpers
+│   │   ├── api/               # Axios client with interceptors
+│   │   ├── components/        # Navbar, SeatCard, CheckoutForm, etc.
+│   │   ├── context/           # AuthContext (React Context + hooks)
+│   │   ├── pages/             # Login, Register, Home, Checkout, Success, Failure
+│   │   └── utils/             # Error helpers
 │   └── package.json
-├── .env.example
+├── .env.example               # Environment variable reference
+├── .gitignore
+├── LICENSE
+├── package.json               # Root scripts (install:all, dev:backend, dev:frontend, seed)
 └── README.md
 ```
 
@@ -104,17 +107,17 @@ linkz-seats/
 
 ## API Reference
 
-| Method | Endpoint                         | Auth | Description                           |
-|--------|----------------------------------|------|---------------------------------------|
-| POST   | `/api/auth/register`             | No   | Create account                        |
-| POST   | `/api/auth/login`                | No   | Login, sets httpOnly cookie           |
-| POST   | `/api/auth/logout`               | No   | Clears cookie                         |
-| GET    | `/api/auth/me`                   | Yes  | Returns current user from cookie      |
-| GET    | `/api/seats`                     | Yes  | List all seats (triggers hold expiry) |
-| POST   | `/api/seats/:id/hold`            | Yes  | Atomically hold a seat                |
-| DELETE | `/api/seats/:id/hold`            | Yes  | Release a hold early                  |
-| POST   | `/api/payments/process`          | Yes  | Charge card, finalise booking         |
-| GET    | `/api/payments/booking/:id`      | Yes  | Get booking status                    |
+| Method | Endpoint                    | Auth | Description                           |
+|--------|-----------------------------|------|---------------------------------------|
+| POST   | `/api/auth/register`        | No   | Create account                        |
+| POST   | `/api/auth/login`           | No   | Login, sets httpOnly cookie           |
+| POST   | `/api/auth/logout`          | No   | Clears cookie                         |
+| GET    | `/api/auth/me`              | Yes  | Returns current user from cookie      |
+| GET    | `/api/seats`                | Yes  | List all seats (triggers hold expiry) |
+| POST   | `/api/seats/:id/hold`       | Yes  | Atomically hold a seat                |
+| DELETE | `/api/seats/:id/hold`       | Yes  | Release a hold early                  |
+| POST   | `/api/payments/process`     | Yes  | Charge card, finalise booking         |
+| GET    | `/api/payments/booking/:id` | Yes  | Get booking status                    |
 
 ---
 
@@ -122,11 +125,11 @@ linkz-seats/
 
 The payment gateway is simulated. Use these card numbers to test different outcomes:
 
-| Card Number         | Result              |
-|---------------------|---------------------|
-| Any valid number    | ~90% success rate   |
-| `xxxx xxxx xxxx 0000` | Always declined     |
-| `xxxx xxxx xxxx 1111` | Insufficient funds  |
+| Card Number           | Result             |
+|-----------------------|--------------------|
+| Any valid number      | ~90% success rate  |
+| `xxxx xxxx xxxx 0000` | Always declined    |
+| `xxxx xxxx xxxx 1111` | Insufficient funds |
 
 ---
 
@@ -234,7 +237,7 @@ Within the ~2-hour scope, the following were consciously cut:
 | MongoDB | Flexible schema for a prototype, document-level atomicity sufficient for single-seat holds, easy local setup |
 | Mongoose | Strong TypeScript integration, readable schema definitions |
 | JWT in httpOnly cookies | Secure defaults without needing a session store; the 90-day requirement is met cleanly |
-| React + Vite | Fast dev experience, no SSR complexity needed for a 3-page app |
+| React + Vite | Fast dev experience, no SSR complexity needed for this scope |
 | Tailwind CSS | Rapid, consistent UI without a component library dependency |
 | Zod | Schema validation at the API boundary; rejects malformed input before it reaches business logic |
 
@@ -243,7 +246,7 @@ Within the ~2-hour scope, the following were consciously cut:
 ## Known Limitations
 
 1. **No real payment processing** — the gateway is a mock. A production system would use Stripe (or similar) with webhook confirmation.
-2. **In-memory hold expiry** — the 10-second polling window means a hold can appear `held` for slightly longer than 2 minutes to concurrent users.
+2. **Lazy hold expiry** — the 10-second polling window means a held seat can appear occupied for slightly longer than 2 minutes to concurrent users.
 3. **Single-node assumption** — the seat hold logic is correct on a single Node process. Running multiple backend replicas without a distributed lock (Redis) would require careful review of the concurrent update behaviour.
 4. **No persistent session revocation** — logging out clears the cookie client-side, but the JWT itself remains valid until it expires. A blocklist would fix this.
 
