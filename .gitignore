@@ -36,3 +36,6 @@ coverage/
 # Vite cache
 .vite/
 **/.vite/
+
+# Assessment PDFs — keep out of the submission repo
+*.pdf
