@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import { getApiError } from '../utils/error';
 
-const POLL_INTERVAL_MS = 10_000; // Re-fetch seats every 10 seconds to reflect changes by other users
+const POLL_INTERVAL_MS = 3_000;
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -95,7 +95,7 @@ export default function HomePage() {
         )}
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          Seat availability refreshes every 10 seconds
+          Seat availability refreshes every 3 seconds
         </p>
       </main>
     </div>

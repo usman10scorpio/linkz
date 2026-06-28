@@ -165,7 +165,7 @@ A user who selects a seat but abandons the checkout must not lock it forever.
 
 **Approach:** Each hold is given a 2-minute expiry timestamp (`heldUntil`). Expired holds are released lazily: every time `GET /seats` is called, the service runs a bulk `updateMany` to reset any hold whose `heldUntil` has passed.
 
-**Trade-off:** Lazy cleanup means a hold technically stays in the `held` state until the next `GET /seats` call. In this app, the frontend polls every 10 seconds, so the practical maximum drift is 10 seconds. For a production system, I'd add a background job (a simple cron, or a MongoDB change stream consumer) to run the cleanup on a fixed schedule regardless of traffic.
+**Trade-off:** Lazy cleanup means a hold technically stays in the `held` state until the next `GET /seats` call. In this app, the frontend polls every 3 seconds, so the practical maximum drift is 3 seconds. For a production system, I'd add a background job (a simple cron, or a MongoDB change stream consumer) to run the cleanup on a fixed schedule regardless of traffic.
 
 **Why 2 minutes?** Short enough to keep seats moving quickly in a demo environment. In a real ticketing platform this would be longer (10–15 minutes) to give users on slow connections enough time to complete checkout — a product decision that deserves explicit stakeholder input. I'd make it configurable via an environment variable in production.
 
@@ -246,7 +246,7 @@ Within the ~2-hour scope, the following were consciously cut:
 ## Known Limitations
 
 1. **No real payment processing** — the gateway is a mock. A production system would use Stripe (or similar) with webhook confirmation.
-2. **Lazy hold expiry** — the 10-second polling window means a held seat can appear occupied for slightly longer than 2 minutes to concurrent users.
+2. **Lazy hold expiry** — the 3-second polling window means a held seat can appear occupied for slightly longer than 2 minutes to concurrent users.
 3. **Single-node assumption** — the seat hold logic is correct on a single Node process. Running multiple backend replicas without a distributed lock (Redis) would require careful review of the concurrent update behaviour.
 4. **No persistent session revocation** — logging out clears the cookie client-side, but the JWT itself remains valid until it expires. A blocklist would fix this.
 
