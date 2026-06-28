@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment — NEVER commit real secrets
+backend/.env
+frontend/.env
+.env
+
+# Build output
+dist/
+build/
+**/dist/
+**/build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+
+# Vite cache
+.vite/
+**/.vite/
