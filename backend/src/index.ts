@@ -32,7 +32,7 @@ app.use(
 // Rate limiting — intentionally generous for a local dev environment.
 // In production, auth endpoints should have much tighter limits.
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 1000,
   max: 20,
   message: { error: 'Too many requests, please try again later' },
   standardHeaders: true,
