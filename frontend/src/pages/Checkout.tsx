@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Armchair } from 'lucide-react';
+import { ArrowLeft, Clock, Armchair, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import CheckoutForm, { CardData } from '../components/CheckoutForm';
@@ -38,6 +38,7 @@ export default function CheckoutPage() {
   const [holdExpiry, setHoldExpiry] = useState<Date | null>(null);
   const [loadingBooking, setLoadingBooking] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Only redirect on expiry after the countdown has actually been ticking —
   // prevents a false redirect on initial render when countdown is still 0.
@@ -93,6 +94,20 @@ export default function CheckoutPage() {
     }
   }, [countdown, holdExpiry, navigate]);
 
+  async function handleCancel() {
+    if (!booking || cancelling) return;
+    setCancelling(true);
+    try {
+      const seatId = typeof booking.seatId === 'object' ? booking.seatId._id : booking.seatId;
+      await api.delete(`/seats/${seatId}/hold`);
+    } catch {
+      // Hold may have already expired — that's fine, navigate back either way
+    } finally {
+      setCancelling(false);
+      navigate('/');
+    }
+  }
+
   async function handlePayment(card: CardData) {
     if (!booking) return;
     setPaying(true);
@@ -145,11 +160,16 @@ export default function CheckoutPage() {
 
       <main className="mx-auto max-w-xl px-4 py-10">
         <button
-          onClick={() => navigate('/')}
-          className="mb-6 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+          onClick={handleCancel}
+          disabled={cancelling || paying}
+          className="mb-6 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back to seats
+          {cancelling ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          ) : (
+            <ArrowLeft className="h-4 w-4" />
+          )}
+          {cancelling ? 'Releasing seat…' : 'Back to seats'}
         </button>
 
         <div className="card overflow-hidden">
@@ -166,18 +186,37 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {holdExpiry && countdown > 0 && (
-                <div
-                  className={`flex flex-col items-end rounded-lg px-3 py-1.5 text-right
-                    ${isUrgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}
-                >
-                  <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Clock className="h-4 w-4" />
-                    {minutes}:{seconds.toString().padStart(2, '0')}
+              <div className="flex items-center gap-3">
+                {holdExpiry && countdown > 0 && (
+                  <div
+                    className={`flex flex-col items-end rounded-lg px-3 py-1.5 text-right
+                      ${isUrgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}
+                  >
+                    <div className="flex items-center gap-1.5 text-sm font-semibold">
+                      <Clock className="h-4 w-4" />
+                      {minutes}:{seconds.toString().padStart(2, '0')}
+                    </div>
+                    <span className="text-xs opacity-75">Hold expires</span>
                   </div>
-                  <span className="text-xs opacity-75">Hold expires</span>
-                </div>
-              )}
+                )}
+
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling || paying}
+                  title="Release this seat and go back"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5
+                             text-xs font-medium text-slate-500 transition-colors
+                             hover:border-red-200 hover:bg-red-50 hover:text-red-600
+                             disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {cancelling ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+                  ) : (
+                    <X className="h-3.5 w-3.5" />
+                  )}
+                  Release seat
+                </button>
+              </div>
             </div>
           </div>
 
